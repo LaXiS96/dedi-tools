@@ -7,14 +7,36 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 apt-get update
-AVAILABLE_KERNELS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
-CHOSEN_KERNEL=""
-echo
-while [ "x$CHOSEN_KERNEL" = "x" ]; do
-  echo -n -e "\e[1F\e[2KUbuntu LTS Kernel stack (available: $AVAILABLE_KERNELS): "; read CHOSEN_KERNEL
-done
-apt-get -y install linux-generic-lts-$CHOSEN_KERNEL
+#AVAILABLE_KERNELS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
+#CHOSEN_KERNEL=""
+#echo
+#while [ "x$CHOSEN_KERNEL" = "x" ]; do
+#  echo -n -e "\e[1F\e[2KUbuntu LTS Kernel stack (available: $AVAILABLE_KERNELS): "; read CHOSEN_KERNEL
+#done
+#apt-get -y install linux-generic-lts-$CHOSEN_KERNEL
+AVAILABLE_STACKS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
+AVAILABLE_STACKS=($AVAILABLE_STACKS)
+#TODO: list each stack with its current package (kernel) version
+#TODO: loop the AVAILABLE_STACKS with ${AVAILABLE_STACKS[n]}
 
+echo "Setting up locale and timezone..."
 rm /etc/localtime; ln -s /usr/share/zoneinfo/CET /etc/localtime
 locale-gen en_US.UTF-8; update-locale LANG=en_US.UTF-8
 
+echo -n "Ready to edit /etc/hostname? [Y/n] "; YESNO=""; read YESNO
+case $YESNO in ""|[Yy]) nano /etc/hostname;; esac
+
+echo -n "Ready to edit /etc/network/interfaces? [Y/n] "; YESNO=""; read YESNO
+case $YESNO in ""|[Yy]) nano /etc/network/interfaces;; esac
+
+echo "Adding key \"$(echo "$PUBLIC_KEY" | cut -d" " -f3-)\" to root's authorized_keys..."
+if [ ! -f "/root/.ssh/authorized_keys" ]; then
+  mkdir -p /root/.ssh
+  echo -n "" >/root/.ssh/authorized_keys
+fi
+echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
+
+echo -n "Ready to edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; read YESNO
+case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
+
+echo; echo "Script done. Please reboot the machine."
