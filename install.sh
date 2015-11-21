@@ -34,7 +34,7 @@ if [ ! -f "/root/.ssh/authorized_keys" ]; then
 fi
 echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
 
-echo -n "Ready to edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; read YESNO
+echo -n "Edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; read YESNO
 case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
 
 echo; echo "Script done. Please reboot the machine."
