@@ -24,6 +24,9 @@ locale-gen en_US.UTF-8; update-locale LANG=en_US.UTF-8
 echo -n "Edit /etc/hostname? [Y/n] "; YESNO=""; read YESNO
 case $YESNO in ""|[Yy]) nano /etc/hostname;; esac
 
+echo -n "Edit /etc/hosts? [Y/n] "; YESNO=""; read YESNO
+case $YESNO in ""|[Yy]) nano /etc/hosts;; esac
+
 echo -n "Edit /etc/network/interfaces? [Y/n] "; YESNO=""; read YESNO
 case $YESNO in ""|[Yy]) nano /etc/network/interfaces;; esac
 
@@ -58,20 +61,13 @@ case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
   cat > /etc/iptables.rules <<EOT
 *filter
-# Inbound Established
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-# Inbound Forwardings
--A INPUT -p tcp -m state --state NEW --dport 52200 -j ACCEPT
--A INPUT -p icmp -m state --state NEW --icmp-type echo-request -j ACCEPT
-# LogDrop
--N LOGDROP
--A LOGDROP -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "[iptables] " --log-level 7
--A LOGDROP -j DROP
-# Policies
 -P INPUT ACCEPT
--A INPUT -j LOGDROP
--P FORWARD ACCEPT
 -P OUTPUT ACCEPT
+-P FORWARD ACCEPT
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p tcp -m state --state NEW --dport 22 -j ACCEPT
+-A INPUT -p icmp -m state --state NEW --icmp-type echo-request -j ACCEPT
+-P INPUT DROP
 COMMIT
 EOT
   nano /etc/iptables.rules
