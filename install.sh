@@ -16,8 +16,12 @@ apt-get update
 #apt-get -y install linux-generic-lts-$CHOSEN_KERNEL
 AVAILABLE_STACKS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
 AVAILABLE_STACKS=($AVAILABLE_STACKS)
-#TODO: list each stack with its current package (kernel) version
-#TODO: loop the AVAILABLE_STACKS with ${AVAILABLE_STACKS[n]}
+for STACK in ${AVAILABLE_STACKS[@]}; do
+  STACK_VERSION="$(apt-cache show linux-generic-lts-$STACK | grep "Version: " | awk '{print $2}' | tr '\n' ' ' | sed 's/[ ]*$//')"
+  echo -e "$STACK\t$STACK_VERSION"
+done
+echo -n "Which stack do you want to install? [stack/N] "; INPUT=""; read INPUT
+case $INPUT in "") echo "Skipping...";; *) apt-get -y install linux-generic-lts-$INPUT;; esac
 
 echo "Setting up locale and timezone..."
 rm /etc/localtime; ln -s /usr/share/zoneinfo/CET /etc/localtime
