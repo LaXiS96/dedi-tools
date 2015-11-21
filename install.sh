@@ -7,13 +7,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 apt-get update
-#AVAILABLE_KERNELS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
-#CHOSEN_KERNEL=""
-#echo
-#while [ "x$CHOSEN_KERNEL" = "x" ]; do
-#  echo -n -e "\e[1F\e[2KUbuntu LTS Kernel stack (available: $AVAILABLE_KERNELS): "; read CHOSEN_KERNEL
-#done
-#apt-get -y install linux-generic-lts-$CHOSEN_KERNEL
+echo; echo "Available Ubuntu LTS stacks:"
 AVAILABLE_STACKS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
 AVAILABLE_STACKS=($AVAILABLE_STACKS)
 for STACK in ${AVAILABLE_STACKS[@]}; do
@@ -21,16 +15,16 @@ for STACK in ${AVAILABLE_STACKS[@]}; do
   echo -e "$STACK\t$STACK_VERSION"
 done
 echo -n "Which stack do you want to install? [stack/N] "; INPUT=""; read INPUT
-case $INPUT in "") echo "Skipping...";; *) apt-get -y install linux-generic-lts-$INPUT;; esac
+case $INPUT in ""|[Nn]) echo "Skipping...";; *) apt-get -y install linux-generic-lts-$INPUT;; esac
 
 echo "Setting up locale and timezone..."
 rm /etc/localtime; ln -s /usr/share/zoneinfo/CET /etc/localtime
 locale-gen en_US.UTF-8; update-locale LANG=en_US.UTF-8
 
-echo -n "Ready to edit /etc/hostname? [Y/n] "; YESNO=""; read YESNO
+echo -n "Edit /etc/hostname? [Y/n] "; YESNO=""; read YESNO
 case $YESNO in ""|[Yy]) nano /etc/hostname;; esac
 
-echo -n "Ready to edit /etc/network/interfaces? [Y/n] "; YESNO=""; read YESNO
+echo -n "Edit /etc/network/interfaces? [Y/n] "; YESNO=""; read YESNO
 case $YESNO in ""|[Yy]) nano /etc/network/interfaces;; esac
 
 echo "Adding key \"$(echo "$PUBLIC_KEY" | cut -d" " -f3-)\" to root's authorized_keys..."
