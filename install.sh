@@ -7,7 +7,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 apt-get update
-echo; echo "Available Ubuntu LTS stacks:"
+echo; echo "Available LTS kernel stacks:"
 AVAILABLE_STACKS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
 AVAILABLE_STACKS=($AVAILABLE_STACKS)
 for STACK in ${AVAILABLE_STACKS[@]}; do
@@ -36,5 +36,48 @@ echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
 
 echo -n "Edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; read YESNO
 case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
+
+echo -n "Do you want to setup LXC for root-unprivileged containers? [Y/n] "; YESNO=""; read YESNO
+case $YESNO in ""|[Yy]) YESNO="y";; esac
+if [ "$YESNO" = "y" ]; then
+  apt-get -y install lxc
+  usermod --add-subuids 100000-165535 root
+  usermod --add-subgids 100000-165535 root
+  echo "lxc.id_map = u 0 100000 65536" >> /etc/lxc/default.conf
+  echo "lxc.id_map = g 0 100000 65536" >> /etc/lxc/default.conf
+  echo "lxc.start.auto = 1" >> /etc/lxc/default.conf
+  echo "lxc.start.delay = 5" >> /etc/lxc/default.conf
+  echo "lxc.mount.entry = /share share none bind,create=dir 0 0" >> /etc/lxc/default.conf
+  chmod +x /var/lib/lxc
+  mkdir -m 0777 /share
+  echo "LXC was setup successfully."
+fi
+
+echo -n "Setup iptables and edit /etc/iptables.rules? [Y/n] "; YESNO=""; read YESNO
+case $YESNO in ""|[Yy]) YESNO="y";; esac
+if [ "$YESNO" = "y" ]; then
+  cat > /etc/iptables.rules <<EOT
+*filter
+# Inbound Established
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+# Inbound Forwardings
+-A INPUT -p tcp -m state --state NEW --dport 52200 -j ACCEPT
+-A INPUT -p icmp -m state --state NEW --icmp-type echo-request -j ACCEPT
+# LogDrop
+-N LOGDROP
+-A LOGDROP -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "[iptables] " --log-level 7
+-A LOGDROP -j DROP
+# Policies
+-P INPUT ACCEPT
+-A INPUT -j LOGDROP
+-P FORWARD ACCEPT
+-P OUTPUT ACCEPT
+COMMIT
+EOT
+  nano /etc/iptables.rules
+  echo -n "Please add \"pre-up iptables-restore < /etc/iptables.rules\" to your main interface [press any key] "; read
+  nano /etc/network/interfaces
+  echo "Iptables is configured."
+fi
 
 echo; echo "Script done. Please reboot the machine."
