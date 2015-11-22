@@ -7,7 +7,9 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-apt-get update
+echo -n "Skip apt lists update? [y/N] "; YESNO=""; $READ YESNO
+case $YESNO in ""|[Nn]) apt-get update;; esac
+
 echo; echo "Available LTS kernel stacks:"
 AVAILABLE_STACKS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
 AVAILABLE_STACKS=($AVAILABLE_STACKS)
