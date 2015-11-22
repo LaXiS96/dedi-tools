@@ -7,7 +7,7 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-echo -n "Skip apt lists update? [y/N] "; YESNO=""; $READ YESNO
+echo -n "Skip apt-get update? [y/N] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Nn]) apt-get update;; esac
 
 echo; echo "Available LTS kernel stacks:"
