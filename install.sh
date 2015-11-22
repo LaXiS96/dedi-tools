@@ -1,6 +1,6 @@
 #!/bin/bash
 PUBLIC_KEY="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAyTUJfAeSIe3vPrpMZDIF7KDYGVdEbVYHEXTtAH1Tfwl2w0R6vuyvG3upW5qSbrBgcp1g+N/WWjE0nlenlaoiDdAWVUb74NKTmiff/pgzshzcINv81bVshYZsNHvp6zms0uzxktnLjndzgP7mr0fVFKAiEBVV8UFVolo8skJW8d2GMRU06GFO+RePqaS3kt/y1LXTcZb56mt3vl8R5jvxDAGccB8gOakFSkVuY15PheHES5tzqOTLsznpFQjJBu08yyvdbFR6v4BA0OZY5QAOutt0H654QW521UrItjJ9OeSSTj/s4t0D55eMF5JAkHPi0gDqImD2zJ5y9KFdQlnfBQ== dedi.laxis.it"
-alias read="read -e"
+READ="read -e"
 
 if [ "$(id -u)" != "0" ]; then
   echo "This script must be run as root!" 1>&2
@@ -15,41 +15,41 @@ for STACK in ${AVAILABLE_STACKS[@]}; do
   STACK_VERSION="$(apt-cache show linux-generic-lts-$STACK | grep "Version: " | awk '{print $2}' | tr '\n' ' ' | sed 's/[ ]*$//')"
   echo -e "$STACK\t$STACK_VERSION"
 done
-echo -n "Which stack do you want to install? [stack/N] "; INPUT=""; read INPUT
+echo -n "Which stack do you want to install? [stack/N] "; INPUT=""; $READ INPUT
 case $INPUT in ""|[Nn]) echo "Skipping...";; *) apt-get -y install linux-generic-lts-$INPUT;; esac
 
 echo "Setting up locale and timezone..."
 rm /etc/localtime; ln -s /usr/share/zoneinfo/CET /etc/localtime
 locale-gen en_US.UTF-8; update-locale LANG=en_US.UTF-8
 
-echo -n "Edit /etc/hostname? [Y/n] "; YESNO=""; read YESNO
+echo -n "Edit /etc/hostname? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) nano /etc/hostname;; esac
 
-echo -n "Edit /etc/hosts? [Y/n] "; YESNO=""; read YESNO
+echo -n "Edit /etc/hosts? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) nano /etc/hosts;; esac
 
-echo -n "Setup static IPv6? [Y/n] "; YESNO=""; read YESNO
+echo -n "Setup static IPv6? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
-  echo -n "Main interface (e.g. eth0, em1): "; IFACE=""; read IFACE
+  echo -n "Main interface (e.g. eth0, em1): "; IFACE=""; $READ IFACE
   OUT="iface $IFACE inet6 static\n"
-  echo -n "IPv6 address (no /prefix, short form allowed): "; ADDR=""; read ADDR
+  echo -n "IPv6 address (no /prefix, short form allowed): "; ADDR=""; $READ ADDR
   OUT="$OUT\taddress $ADDR\n"
-  echo -n "Network prefix (only numbers): "; PREFIX=""; read PREFIX
+  echo -n "Network prefix (only numbers): "; PREFIX=""; $READ PREFIX
   OUT="$OUT\tnetmask $PREFIX\n"
-  echo -n "Gateway (no /prefix, short form allowed): "; GATEWAY=""; read GATEWAY
+  echo -n "Gateway (no /prefix, short form allowed): "; GATEWAY=""; $READ GATEWAY
   OUT="$OUT\tup ip -6 route add $GATEWAY dev $IFNAME\n"
   OUT="$OUT\tup ip -6 route add default via $GATEWAY dev $IFNAME\n"
   cat /etc/network/interfaces > /etc/network/interfaces.bk
   cat /etc/network/interfaces > /etc/network/interfaces.tmp
   echo "$OUT" >> /etc/network/interfaces.tmp
   echo "A backup of your current /etc/network/interfaces was saved as /etc/network/interfaces.bk"
-  echo -n "Please check /etc/network/interfaces and edit to your liking [press any key] "; read
+  echo -n "Please check /etc/network/interfaces and edit to your liking [press any key] "; $READ
   nano /etc/network/interfaces.tmp
-  echo -n "Should I apply your changes (they are currently in /etc/network/interfaces.tmp)? [Y/n] "; YESNO=""; read YESNO
+  echo -n "Should I apply your changes (they are currently in /etc/network/interfaces.tmp)? [Y/n] "; YESNO=""; $READ YESNO
   case $YESNO in ""|[Yy]) rm -f /etc/network/interfaces; mv /etc/network/interfaces.tmp /etc/network/interfaces;; esac
 else
-  echo -n "Edit /etc/network/interfaces? [Y/n] "; YESNO=""; read YESNO
+  echo -n "Edit /etc/network/interfaces? [Y/n] "; YESNO=""; $READ YESNO
   case $YESNO in ""|[Yy]) nano /etc/network/interfaces;; esac
 fi
 
@@ -60,10 +60,10 @@ if [ ! -f "/root/.ssh/authorized_keys" ]; then
 fi
 echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
 
-echo -n "Edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; read YESNO
+echo -n "Edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
 
-echo -n "Do you want to setup LXC for root-unprivileged containers? [Y/n] "; YESNO=""; read YESNO
+echo -n "Do you want to setup LXC for root-unprivileged containers? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
   apt-get -y install lxc
@@ -79,7 +79,7 @@ if [ "$YESNO" = "y" ]; then
   echo "LXC was setup successfully."
 fi
 
-echo -n "Setup iptables and edit /etc/iptables.rules? [Y/n] "; YESNO=""; read YESNO
+echo -n "Setup iptables and edit /etc/iptables.rules? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
   cat > /etc/iptables.rules <<EOT
@@ -94,7 +94,7 @@ if [ "$YESNO" = "y" ]; then
 COMMIT
 EOT
   nano /etc/iptables.rules
-  echo -n "Please add \"pre-up iptables-restore < /etc/iptables.rules\" to your main interface [press any key] "; read
+  echo -n "Please add \"pre-up iptables-restore < /etc/iptables.rules\" to your main interface [press any key] "; $READ
   nano /etc/network/interfaces
   echo "Iptables is configured."
 fi
