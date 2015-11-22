@@ -42,7 +42,7 @@ if [ "$YESNO" = "y" ]; then
   OUT="$OUT\tup ip -6 route add default via $GATEWAY dev $IFNAME\n"
   cat /etc/network/interfaces > /etc/network/interfaces.bk
   cat /etc/network/interfaces > /etc/network/interfaces.tmp
-  echo "$OUT" >> /etc/network/interfaces.tmp
+  echo -n -e "$OUT" >> /etc/network/interfaces.tmp
   echo "A backup of your current /etc/network/interfaces was saved as /etc/network/interfaces.bk"
   echo -n "Please check /etc/network/interfaces and edit to your liking [press any key] "; $READ
   nano /etc/network/interfaces.tmp
