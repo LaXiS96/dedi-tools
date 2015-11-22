@@ -18,9 +18,9 @@ for STACK in ${AVAILABLE_STACKS[@]}; do
   echo -e "$STACK\t$STACK_VERSION"
 done
 echo -n "Which stack do you want to install? [stack/N] "; INPUT=""; $READ INPUT
-case $INPUT in ""|[Nn]) echo "Skipping...";; *) apt-get -y install linux-generic-lts-$INPUT;; esac
+case $INPUT in ""|[Nn]) echo "Skipping kernel upgrade...";; *) apt-get -y install linux-generic-lts-$INPUT;; esac
 
-echo "Setting up locale and timezone..."
+echo; echo "Setting up locale and timezone..."
 rm /etc/localtime; ln -s /usr/share/zoneinfo/CET /etc/localtime
 locale-gen en_US.UTF-8; update-locale LANG=en_US.UTF-8
 
@@ -40,12 +40,12 @@ if [ "$YESNO" = "y" ]; then
   echo -n "Network prefix (only numbers): "; PREFIX=""; $READ PREFIX
   OUT="$OUT\tnetmask $PREFIX\n"
   echo -n "Gateway (no /prefix, short form allowed): "; GATEWAY=""; $READ GATEWAY
-  OUT="$OUT\tup ip -6 route add $GATEWAY dev $IFNAME\n"
-  OUT="$OUT\tup ip -6 route add default via $GATEWAY dev $IFNAME\n"
+  OUT="$OUT\tup ip -6 route add $GATEWAY dev $IFACE\n"
+  OUT="$OUT\tup ip -6 route add default via $GATEWAY dev $IFACE\n"
   cat /etc/network/interfaces > /etc/network/interfaces.bk
   cat /etc/network/interfaces > /etc/network/interfaces.tmp
   echo -n -e "$OUT" >> /etc/network/interfaces.tmp
-  echo "A backup of your current /etc/network/interfaces was saved as /etc/network/interfaces.bk"
+  echo; echo "A backup of your current /etc/network/interfaces was saved as /etc/network/interfaces.bk"
   echo -n "Please check /etc/network/interfaces and edit to your liking [press any key] "; $READ
   nano /etc/network/interfaces.tmp
   echo -n "Should I apply your changes (they are currently in /etc/network/interfaces.tmp)? [Y/n] "; YESNO=""; $READ YESNO
