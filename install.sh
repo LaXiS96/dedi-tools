@@ -55,7 +55,7 @@ else
   case $YESNO in ""|[Yy]) nano /etc/network/interfaces;; esac
 fi
 
-echo "Adding key \"$(echo "$PUBLIC_KEY" | cut -d" " -f3-)\" to root's authorized_keys..."
+echo; echo "Adding key \"$(echo "$PUBLIC_KEY" | cut -d" " -f3-)\" to root's authorized_keys..."
 if [ ! -f "/root/.ssh/authorized_keys" ]; then
   mkdir -p /root/.ssh
   echo -n "" >/root/.ssh/authorized_keys
@@ -65,7 +65,7 @@ echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
 echo -n "Edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
 
-echo -n "Do you want to setup LXC for root-unprivileged containers? [Y/n] "; YESNO=""; $READ YESNO
+echo; echo -n "Do you want to setup LXC for root-unprivileged containers? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
   apt-get -y install lxc
@@ -81,7 +81,7 @@ if [ "$YESNO" = "y" ]; then
   echo "LXC was setup successfully."
 fi
 
-echo -n "Setup iptables and edit /etc/iptables.rules? [Y/n] "; YESNO=""; $READ YESNO
+echo; echo -n "Setup iptables and edit /etc/iptables.rules? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
   cat > /etc/iptables.rules <<EOT
