@@ -7,6 +7,8 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
+echo "REMARK: If you reply to questions with just Enter (aka an empty string, \"\"), the [UPPERCASE] option is assumed."
+
 echo -n "Skip apt-get update? [y/N] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Nn]) apt-get update;; esac
 
@@ -76,7 +78,26 @@ if [ "$YESNO" = "y" ]; then
   echo "lxc.start.auto = 1" >> /etc/lxc/default.conf
   echo "lxc.start.delay = 5" >> /etc/lxc/default.conf
   echo "lxc.mount.entry = /share share none bind,create=dir 0 0" >> /etc/lxc/default.conf
-  chmod +x /var/lib/lxc
+  
+  echo -n "Alternative path for /var/lib/lxc: [path/N] "; INPUT=""; $READ INPUT
+  case $INPUT in
+    ""|[Nn])
+      echo "Using default /var/lib/lxc for container storage..."
+      chmod 0711 /var/lib/lxc
+      ;;
+    *)
+      if [ -d "$INPUT" ]; then
+        echo -n "Directory $INPUT exists..."
+      else
+        echo -n "Directory $INPUT does not exist. Creating it..."
+        mkdir -p "$INPUT"
+      fi
+      chmod 0711 "$INPUT"
+      rm -f /var/lib/lxc
+      ln -s "$INPUT" /var/lib/lxc
+      ;;
+  esac
+  
   mkdir -m 0777 /share
   echo "LXC was setup successfully."
 fi
