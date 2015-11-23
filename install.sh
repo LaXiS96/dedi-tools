@@ -71,6 +71,7 @@ echo; echo -n "Do you want to setup LXC for root-unprivileged containers? [Y/n] 
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
   apt-get -y install lxc
+  echo "Setting LXC defaults..."
   usermod --add-subuids 100000-165535 root
   usermod --add-subgids 100000-165535 root
   echo "lxc.id_map = u 0 100000 65536" >> /etc/lxc/default.conf
@@ -79,7 +80,7 @@ if [ "$YESNO" = "y" ]; then
   echo "lxc.start.delay = 5" >> /etc/lxc/default.conf
   echo "lxc.mount.entry = /share share none bind,create=dir 0 0" >> /etc/lxc/default.conf
   
-  echo -n "Alternative path for /var/lib/lxc: [path/N] "; INPUT=""; $READ INPUT
+  echo -n "Alternative path for /var/lib/lxc [path/N]: "; INPUT=""; $READ INPUT
   case $INPUT in
     ""|[Nn])
       echo "Using default /var/lib/lxc for container storage..."
@@ -93,8 +94,9 @@ if [ "$YESNO" = "y" ]; then
         mkdir -p "$INPUT"
       fi
       chmod 0711 "$INPUT"
-      rm -f /var/lib/lxc
-      ln -s "$INPUT" /var/lib/lxc
+      rmdir /var/lib/lxc &&
+      ln -s "$INPUT" /var/lib/lxc &&
+      echo "$INPUT was symlinked to /var/lib/lxc..."
       ;;
   esac
   
