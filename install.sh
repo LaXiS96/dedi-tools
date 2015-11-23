@@ -88,9 +88,9 @@ if [ "$YESNO" = "y" ]; then
       ;;
     *)
       if [ -d "$INPUT" ]; then
-        echo -n "Directory $INPUT exists..."
+        echo "Directory $INPUT exists..."
       else
-        echo -n "Directory $INPUT does not exist. Creating it..."
+        echo "Directory $INPUT does not exist. Creating it..."
         mkdir -p "$INPUT"
       fi
       chmod 0711 "$INPUT"
