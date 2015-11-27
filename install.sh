@@ -7,7 +7,7 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-echo "REMARK: If you reply to questions with just Enter (aka an empty string, \"\"), the [UPPERCASE] option is assumed."
+echo "REMARK: Reply to questions by pressing Enter to use the default [UPPERCASE] option."
 
 echo -n "Skip apt-get update? [y/N] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Nn]) apt-get update;; esac
@@ -79,6 +79,7 @@ if [ "$YESNO" = "y" ]; then
   echo "lxc.start.auto = 1" >> /etc/lxc/default.conf
   echo "lxc.start.delay = 5" >> /etc/lxc/default.conf
   echo "lxc.mount.entry = /share share none bind,create=dir 0 0" >> /etc/lxc/default.conf
+  mkdir -m 0777 /share
   
   echo -n "Alternative path for /var/lib/lxc [path/N]: "; INPUT=""; $READ INPUT
   case $INPUT in
@@ -100,7 +101,10 @@ if [ "$YESNO" = "y" ]; then
       ;;
   esac
   
-  mkdir -m 0777 /share
+  apt-get install git
+  git clone https://github.com/LaXiS96/lxc-tools.git /root/lxc-tools
+  chmod +x /root/lxc-tools/*.sh
+  
   echo "LXC was setup successfully."
 fi
 
