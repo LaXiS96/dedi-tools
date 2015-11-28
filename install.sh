@@ -97,11 +97,11 @@ if [ "$YESNO" = "y" ]; then
       chmod 0711 "$INPUT"
       rmdir /var/lib/lxc &&
       ln -s "$INPUT" /var/lib/lxc &&
-      echo "$INPUT was symlinked to /var/lib/lxc..."
+      echo "/var/lib/lxc was symlinked to $INPUT..."
       ;;
   esac
   
-  apt-get install git
+  apt-get -y install git
   git clone https://github.com/LaXiS96/lxc-tools.git /root/lxc-tools
   chmod +x /root/lxc-tools/*.sh
   
