@@ -35,8 +35,9 @@ case $YESNO in ""|[Yy]) nano /etc/hosts;; esac
 echo -n "Setup static IPv6? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
+  OUT="\n"
   echo -n "Main interface (e.g. eth0, em1): "; IFACE=""; $READ IFACE
-  OUT="iface $IFACE inet6 static\n"
+  OUT="$OUTiface $IFACE inet6 static\n"
   echo -n "IPv6 address (no /prefix, short form allowed): "; ADDR=""; $READ ADDR
   OUT="$OUT\taddress $ADDR\n"
   echo -n "Network prefix (only numbers): "; PREFIX=""; $READ PREFIX
@@ -78,8 +79,8 @@ if [ "$YESNO" = "y" ]; then
   echo "lxc.id_map = g 0 100000 65536" >> /etc/lxc/default.conf
   echo "lxc.start.auto = 1" >> /etc/lxc/default.conf
   echo "lxc.start.delay = 5" >> /etc/lxc/default.conf
-  echo "lxc.mount.entry = /share share none bind,create=dir 0 0" >> /etc/lxc/default.conf
-  mkdir -m 0777 /share
+  echo "lxc.mount.entry = /storage/lxc/share share none bind,create=dir 0 0" >> /etc/lxc/default.conf
+  mkdir -p -m 0777 /storage/lxc/share
   
   echo -n "Alternative path for /var/lib/lxc [path/N]: "; INPUT=""; $READ INPUT
   case $INPUT in
@@ -103,7 +104,7 @@ if [ "$YESNO" = "y" ]; then
   
   apt-get -y install git
   git clone https://github.com/LaXiS96/lxc-tools.git /root/lxc-tools
-  chmod +x /root/lxc-tools/*.sh
+  #chmod +x /root/lxc-tools/*.sh
   
   echo "LXC was setup successfully."
 fi
@@ -114,11 +115,12 @@ if [ "$YESNO" = "y" ]; then
   cat > /etc/iptables.rules <<EOT
 *filter
 -P INPUT ACCEPT
--P OUTPUT ACCEPT
 -P FORWARD ACCEPT
+-P OUTPUT ACCEPT
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -p tcp -m state --state NEW --dport 22 -j ACCEPT
--A INPUT -p icmp -m state --state NEW --icmp-type echo-request -j ACCEPT
+-A INPUT -m state --state NEW -p tcp --dport 22 -j ACCEPT
+-A INPUT -m state --state NEW -p icmp --icmp-type echo-request -j ACCEPT
+-A INPUT -j LOG --log-prefix "[iptables] " --log-level warning
 -P INPUT DROP
 COMMIT
 EOT
