@@ -35,9 +35,8 @@ case $YESNO in ""|[Yy]) nano /etc/hosts;; esac
 echo -n "Setup static IPv6? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
-  OUT="\n"
   echo -n "Main interface (e.g. eth0, em1): "; IFACE=""; $READ IFACE
-  OUT="$OUTiface $IFACE inet6 static\n"
+  OUT="\niface $IFACE inet6 static\n"
   echo -n "IPv6 address (no /prefix, short form allowed): "; ADDR=""; $READ ADDR
   OUT="$OUT\taddress $ADDR\n"
   echo -n "Network prefix (only numbers): "; PREFIX=""; $READ PREFIX
