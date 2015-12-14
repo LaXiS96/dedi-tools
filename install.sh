@@ -12,6 +12,9 @@ echo "REMARK: Reply to questions by pressing Enter to use the default [UPPERCASE
 echo -n "Skip apt-get update? [y/N] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Nn]) apt-get update;; esac
 
+echo -n "Skip apt-get upgrade? [y/N] "; YESNO=""; $READ YESNO
+case $YESNO in ""|[Nn]) apt-get upgrade;; esac
+
 echo; echo "Available LTS kernel stacks:"
 AVAILABLE_STACKS="$(apt-cache search linux-generic-lts | awk '{print $1}' | sed -e 's/^linux-generic-lts-//' -e '/-/d' | tr '\n' ' ' | sed 's/[ ]*$//')"
 AVAILABLE_STACKS=($AVAILABLE_STACKS)
