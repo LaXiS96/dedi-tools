@@ -121,12 +121,19 @@ if [ "$YESNO" = "y" ]; then
 -P OUTPUT ACCEPT
 
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -m state --state NEW -p tcp --dport 22 -j ACCEPT
 -A INPUT -m state --state NEW -p icmp --icmp-type echo-request -j ACCEPT
+-A INPUT -m state --state NEW -p tcp --dport 22 -j ACCEPT
+
+-A INPUT --destination 10.155.7.255 -j DROP
+-A INPUT --destination 255.255.255.255 -j DROP
 
 -A INPUT -j LOG --log-prefix "[iptables] " --log-level warning
 
 -P INPUT DROP
+COMMIT
+
+*nat
+-A PREROUTING --protocol udp --dport 1194 -j DNAT --to-destination 10.0.3.5:1194
 COMMIT
 EOT
   nano /etc/iptables.rules
