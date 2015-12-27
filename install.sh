@@ -105,7 +105,7 @@ if [ "$YESNO" = "y" ]; then
   esac
   
   apt-get -y install git
-  git clone https://github.com/LaXiS96/lxc-tools.git /root/lxc-tools
+  git clone https://github.com/LaXiS96/virt-tools.git /root/virt-tools
   #chmod +x /root/lxc-tools/*.sh
   
   echo "LXC was setup successfully."
@@ -119,10 +119,13 @@ if [ "$YESNO" = "y" ]; then
 -P INPUT ACCEPT
 -P FORWARD ACCEPT
 -P OUTPUT ACCEPT
+
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 -A INPUT -m state --state NEW -p tcp --dport 22 -j ACCEPT
 -A INPUT -m state --state NEW -p icmp --icmp-type echo-request -j ACCEPT
+
 -A INPUT -j LOG --log-prefix "[iptables] " --log-level warning
+
 -P INPUT DROP
 COMMIT
 EOT
