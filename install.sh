@@ -84,62 +84,80 @@ if [ "$YESNO" = "y" ]; then
   echo "lxc.mount.entry = /storage/lxc/share share none bind,create=dir 0 0" >> /etc/lxc/default.conf
   mkdir -p -m 0777 /storage/lxc/share
   
-  echo -n "Alternative path for /var/lib/lxc [path/N]: "; INPUT=""; $READ INPUT
-  case $INPUT in
-    ""|[Nn])
-      echo "Using default /var/lib/lxc for container storage..."
-      chmod 0711 /var/lib/lxc
-      ;;
-    *)
-      if [ -d "$INPUT" ]; then
-        echo "Directory $INPUT exists..."
-      else
-        echo "Directory $INPUT does not exist. Creating it..."
-        mkdir -p "$INPUT"
-      fi
-      chmod 0711 "$INPUT"
-      rmdir /var/lib/lxc &&
-      ln -s "$INPUT" /var/lib/lxc &&
-      echo "/var/lib/lxc was symlinked to $INPUT..."
-      ;;
-  esac
+  mkdir -p /storage/lxc/lib
+  chmod 0711 /storage/lxc/lib
+  rmdir /var/lib/lxc &&
+  ln -s /storage/lxc/lib /var/lib/lxc
+  
+  #echo -n "Alternative path for /var/lib/lxc [path/N]: "; INPUT=""; $READ INPUT
+  #case $INPUT in
+  #  ""|[Nn])
+  #    echo "Using default /var/lib/lxc for container storage..."
+  #    chmod 0711 /var/lib/lxc
+  #    ;;
+  #  *)
+  #    if [ -d "$INPUT" ]; then
+  #      echo "Directory $INPUT exists..."
+  #    else
+  #      echo "Directory $INPUT does not exist. Creating it..."
+  #      mkdir -p "$INPUT"
+  #    fi
+  #    chmod 0711 "$INPUT"
+  #    rmdir /var/lib/lxc &&
+  #    ln -s "$INPUT" /var/lib/lxc &&
+  #    echo "/var/lib/lxc was symlinked to $INPUT..."
+  #    ;;
+  #esac
   
   apt-get -y install git
   git clone https://github.com/LaXiS96/virt-tools.git /root/virt-tools
   #chmod +x /root/lxc-tools/*.sh
   
-  echo "LXC was setup successfully."
+  echo "-- LXC is configured."
 fi
 
-echo; echo -n "Setup iptables and edit /etc/iptables.rules? [Y/n] "; YESNO=""; $READ YESNO
+echo; echo -n "Do you want to setup libvirt for KVM? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
-  cat > /etc/iptables.rules <<EOT
-*filter
--P INPUT ACCEPT
--P FORWARD ACCEPT
--P OUTPUT ACCEPT
+  apt-get -y install qemu-kvm libvirt-bin virtinst
+  mkdir -p /storage/kvm/{pools/main,isos}
+  virsh net-autostart default && virsh net-start default
+  virsh pool-define-as main dir --target /storage/kvm/pools/main
+  virsh pool-autostart main && virsh pool-start main
+  
+  echo "-- libvirt for KVM is configured."
+fi
 
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -m state --state NEW -p icmp --icmp-type echo-request -j ACCEPT
--A INPUT -m state --state NEW -p tcp --dport 22 -j ACCEPT
+echo; echo -n "Setup iptables and edit rules? [Y/n] "; YESNO=""; $READ YESNO
+case $YESNO in ""|[Yy]) YESNO="y";; esac
+if [ "$YESNO" = "y" ]; then
+  cat > /etc/iptables.sh << EOT
+#!/bin/bash
+sleep 10
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
 
--A INPUT --destination 10.155.7.255 -j DROP
--A INPUT --destination 255.255.255.255 -j DROP
+iptables -I INPUT 1 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -I INPUT 2 --destination 10.155.7.255 -j DROP
+iptables -I INPUT 3 --destination 255.255.255.255 -j DROP
 
--A INPUT -j LOG --log-prefix "[iptables] " --log-level warning
+iptables -I INPUT 4 -m state --state NEW -p icmp --icmp-type echo-request -j ACCEPT
+iptables -I INPUT 5 -m state --state NEW -p tcp --dport 22 -j ACCEPT
 
--P INPUT DROP
-COMMIT
+iptables -I INPUT 6 -m state --state NEW --source 10.0.3.5 -j ACCEPT
 
-*nat
--A PREROUTING --protocol udp --dport 1194 -j DNAT --to-destination 10.0.3.5:1194
-COMMIT
+iptables -A INPUT -j LOG --log-prefix "[iptables] " --log-level warning
+iptables -P INPUT DROP
+
+iptables -I FORWARD 2 -m state --state NEW --destination 192.168.122.0/24 -j ACCEPT
+
+iptables -t nat -A PREROUTING -p udp --dport 1194 -j DNAT --to-destination 10.0.3.5:1194
 EOT
-  nano /etc/iptables.rules
-  echo -n "Please add \"pre-up iptables-restore < /etc/iptables.rules\" to your main interface [press any key] "; $READ
+  nano /etc/iptables.sh
+  echo -n "Please add \"pre-up bash /etc/iptables.sh\" to your main interface [press any key] "; $READ
   nano /etc/network/interfaces
-  echo "Iptables is configured."
+  echo "-- iptables is configured."
 fi
 
 echo; echo "Script done. Please reboot the machine."
