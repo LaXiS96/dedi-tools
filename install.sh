@@ -155,7 +155,7 @@ iptables -I FORWARD 2 -m state --state NEW --destination 192.168.122.0/24 -j ACC
 iptables -t nat -A PREROUTING -p udp --dport 1194 -j DNAT --to-destination 10.0.3.5:1194
 EOT
   nano /etc/iptables.sh
-  echo -n "Please add \"pre-up bash /etc/iptables.sh\" to your main interface [press any key] "; $READ
+  echo -n "Please add \"up bash /etc/iptables.sh\" to your main interface [press any key] "; $READ
   nano /etc/network/interfaces
   echo "-- iptables is configured."
 fi
