@@ -85,13 +85,7 @@ case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
   mkdir -p -m 0777 /storage/lxc/share
   
   mv /etc/default/lxc-net /etc/default/lxc-net.bk
-  cat > /etc/default/lxc-net << EOT
-USE_LXC_BRIDGE="false"
-LXC_BRIDGE="lxcbr0"
-LXC_ADDR="10.0.1.1"
-LXC_NETMASK="255.255.255.0"
-LXC_NETWORK="10.0.1.0/24"
-EOT
+  echo -e "USE_LXC_BRIDGE=\"false\"" > /etc/default/lxc-net
 
   echo -ne "\nauto lxcbr0\niface lxcbr0 inet static\n\tbridge_ports none\n\tbridge_fd 0\n\tbridge_maxwait 0\n\tbridge_stop on\n" >> /etc/network/interfaces
   echo -ne "\thwaddress de:ad:ed:ff:ff:01\n\taddress 10.0.1.254\n\tnetmask 255.255.255.0\n" >> /etc/network/interfaces
@@ -135,7 +129,16 @@ EOT
   mkdir -p /storage/kvm/{pools/main,isos}
   virsh pool-define-as main dir --target /storage/kvm/pools/main
   virsh pool-autostart main && virsh pool-start main
-  #virsh net-autostart default && virsh net-start default #TODO
+  
+  cat > /etc/libvirt/qemu/networks/kvmbr0.xml << EOT
+<network>
+  <name>kvmbr0</name>
+  <forward mode="bridge"/>
+  <bridge name="kvmbr0"/>
+</network>
+EOT
+  virsh net-define /etc/libvirt/qemu/networks/kvmbr0.xml
+  virsh net-autostart kvmbr0
   
   echo -ne "\nauto kvmbr0\niface kvmbr0 inet static\n\tbridge_ports none\n\tbridge_fd 0\n\tbridge_maxwait 0\n\tbridge_stop on\n" >> /etc/network/interfaces
   echo -ne "\thwaddress de:ad:ed:ff:ff:02\n\taddress 10.0.2.254\n\tnetmask 255.255.255.0\n" >> /etc/network/interfaces
