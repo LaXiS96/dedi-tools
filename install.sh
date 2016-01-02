@@ -70,6 +70,10 @@ echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
 echo -n "Edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
 
+mkdir /storage
+echo -e "\nUUID=1d7b8ae6-f2bc-4491-a523-8d062c53c115 /storage        ext4    defaults        0       2" >> /etc/fstab
+mount /storage
+
 #echo; echo -n "Do you want to setup LXC for root-unprivileged containers? [Y/n] "; YESNO=""; $READ YESNO
 #case $YESNO in ""|[Yy]) YESNO="y";; esac
 #if [ "$YESNO" = "y" ]; then
@@ -157,7 +161,6 @@ EOT
 -P OUTPUT ACCEPT
 
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT --destination 10.155.7.255 -j DROP
 -A INPUT --destination 255.255.255.255 -j DROP
 
 -A INPUT -m state --state NEW -p icmp --icmp-type echo-request -j ACCEPT
