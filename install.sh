@@ -70,7 +70,7 @@ echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
 echo -n "Edit /etc/ssh/sshd_config? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) nano /etc/ssh/sshd_config;; esac
 
-mkdir /storage
+mkdir -p /storage
 echo -e "\nUUID=1d7b8ae6-f2bc-4491-a523-8d062c53c115 /storage        ext4    defaults        0       2" >> /etc/fstab
 mount /storage
 
