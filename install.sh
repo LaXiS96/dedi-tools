@@ -38,23 +38,30 @@ case $YESNO in ""|[Yy]) nano /etc/hosts;; esac
 echo -n "Setup static IPv6? [Y/n] "; YESNO=""; $READ YESNO
 case $YESNO in ""|[Yy]) YESNO="y";; esac
 if [ "$YESNO" = "y" ]; then
-  echo -n "Main interface (e.g. eth0, em1): "; IFACE=""; $READ IFACE
-  OUT="\niface $IFACE inet6 static\n"
-  echo -n "IPv6 address (no /prefix, short form allowed): "; ADDR=""; $READ ADDR
-  OUT="$OUT\taddress $ADDR\n"
-  echo -n "Network prefix (only numbers): "; PREFIX=""; $READ PREFIX
-  OUT="$OUT\tnetmask $PREFIX\n"
-  echo -n "Gateway (no /prefix, short form allowed): "; GATEWAY=""; $READ GATEWAY
-  OUT="$OUT\tup ip -6 route add $GATEWAY dev $IFACE\n"
-  OUT="$OUT\tup ip -6 route add default via $GATEWAY dev $IFACE\n"
-  cat /etc/network/interfaces > /etc/network/interfaces.bk
-  cat /etc/network/interfaces > /etc/network/interfaces.tmp
-  echo -n -e "$OUT" >> /etc/network/interfaces.tmp
-  echo; echo "A backup of your current /etc/network/interfaces was saved as /etc/network/interfaces.bk"
-  echo -n "Please review /etc/network/interfaces and edit to your liking [press any key] "; $READ
-  nano /etc/network/interfaces.tmp
-  echo -n "Should I apply your changes (they are currently in /etc/network/interfaces.tmp)? [Y/n] "; YESNO=""; $READ YESNO
-  case $YESNO in ""|[Yy]) rm -f /etc/network/interfaces; mv /etc/network/interfaces.tmp /etc/network/interfaces;; esac
+  #echo -n "Main interface (e.g. eth0, em1): "; IFACE=""; $READ IFACE
+  #OUT="\niface $IFACE inet6 static\n"
+  #echo -n "IPv6 address (no /prefix, short form allowed): "; ADDR=""; $READ ADDR
+  #OUT="$OUT\taddress $ADDR\n"
+  #echo -n "Network prefix (only numbers): "; PREFIX=""; $READ PREFIX
+  #OUT="$OUT\tnetmask $PREFIX\n"
+  #echo -n "Gateway (no /prefix, short form allowed): "; GATEWAY=""; $READ GATEWAY
+  #OUT="$OUT\tup ip -6 route add $GATEWAY dev $IFACE\n"
+  #OUT="$OUT\tup ip -6 route add default via $GATEWAY dev $IFACE\n"
+  #cat /etc/network/interfaces > /etc/network/interfaces.bk
+  #cat /etc/network/interfaces > /etc/network/interfaces.tmp
+  #echo -n -e "$OUT" >> /etc/network/interfaces.tmp
+  #echo; echo "A backup of your current /etc/network/interfaces was saved as /etc/network/interfaces.bk"
+  #echo -n "Please review /etc/network/interfaces and edit to your liking [press any key] "; $READ
+  #nano /etc/network/interfaces.tmp
+  #echo -n "Should I apply your changes (they are currently in /etc/network/interfaces.tmp)? [Y/n] "; YESNO=""; $READ YESNO
+  #case $YESNO in ""|[Yy]) rm -f /etc/network/interfaces; mv /etc/network/interfaces.tmp /etc/network/interfaces;; esac
+  
+  echo -ne "\tup iptables-restore < /etc/iptables.rules\n" >> /etc/network/interfaces
+  echo -ne "\niface p7p1 inet6 static\n\taddress 2001:4ba0:ffed:120::1\n\tnetmask 128\n" >> /etc/network/interfaces
+  echo -ne "\tup ip -6 route add 2001:4ba0:ffed:1:beef::1 dev p7p1\n" >> /etc/network/interfaces
+  echo -ne "\tup ip -6 route add default via 2001:4ba0:ffed:1:beef::1 dev p7p1\n" >> /etc/network/interfaces
+  echo -ne "\tup ip6tables-restore < /etc/ip6tables.rules\n" >> /etc/network/interfaces
+  
 else
   echo -n "Edit /etc/network/interfaces? [Y/n] "; YESNO=""; $READ YESNO
   case $YESNO in ""|[Yy]) nano /etc/network/interfaces;; esac
@@ -93,6 +100,7 @@ mount /storage
 
   echo -ne "\nauto lxcbr0\niface lxcbr0 inet static\n\tbridge_ports none\n\tbridge_fd 0\n\tbridge_maxwait 0\n\tbridge_stop on\n" >> /etc/network/interfaces
   echo -ne "\thwaddress de:ad:ed:ff:ff:01\n\taddress 10.0.1.254\n\tnetmask 255.255.255.0\n" >> /etc/network/interfaces
+  echo -ne "\niface lxcbr0 inet6 static\n\taddress 2001:4ba0:ffed:120::1\n\tnetmask 64\n" >> /etc/network/interfaces
   
   mkdir -p /storage/lxc/lib
   chmod 0711 /storage/lxc/lib
@@ -146,6 +154,7 @@ EOT
   
   echo -ne "\nauto kvmbr0\niface kvmbr0 inet static\n\tbridge_ports none\n\tbridge_fd 0\n\tbridge_maxwait 0\n\tbridge_stop on\n" >> /etc/network/interfaces
   echo -ne "\thwaddress de:ad:ed:ff:ff:02\n\taddress 10.0.2.254\n\tnetmask 255.255.255.0\n" >> /etc/network/interfaces
+  echo -ne "\niface kvmbr0 inet6 static\n\taddress 2001:4ba0:ffed:120::1\n\tnetmask 64\n" >> /etc/network/interfaces
   
   echo "-- libvirt for KVM is configured."
 #fi
@@ -181,8 +190,22 @@ COMMIT
 COMMIT
 EOT
   nano /etc/iptables.rules
-  echo -n "Please add \"up iptables-restore < /etc/iptables.rules\" to your main interface [press any key] "; $READ
-  nano /etc/network/interfaces
+  cat > /etc/ip6tables.rules << EOT
+*filter
+-P INPUT ACCEPT
+-P FORWARD ACCEPT
+-P OUTPUT ACCEPT
+
+-P INPUT DROP
+COMMIT
+EOT
+  nano /etc/ip6tables.rules
+  #echo -ne "Please add\n"
+  #echo -ne "\tup iptables-restore < /etc/iptables.rules\n"
+  #echo -ne "\tup ip6tables-restore < /etc/ip6tables.rules\n"
+  #echo -ne "to your main interface [press any key] "
+  #$READ
+  #nano /etc/network/interfaces
   echo "-- iptables is configured."
 #fi
 
