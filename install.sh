@@ -51,7 +51,7 @@ if [ "$YESNO" = "y" ]; then
   cat /etc/network/interfaces > /etc/network/interfaces.tmp
   echo -n -e "$OUT" >> /etc/network/interfaces.tmp
   echo; echo "A backup of your current /etc/network/interfaces was saved as /etc/network/interfaces.bk"
-  echo -n "Please check /etc/network/interfaces and edit to your liking [press any key] "; $READ
+  echo -n "Please review /etc/network/interfaces and edit to your liking [press any key] "; $READ
   nano /etc/network/interfaces.tmp
   echo -n "Should I apply your changes (they are currently in /etc/network/interfaces.tmp)? [Y/n] "; YESNO=""; $READ YESNO
   case $YESNO in ""|[Yy]) rm -f /etc/network/interfaces; mv /etc/network/interfaces.tmp /etc/network/interfaces;; esac
@@ -150,10 +150,16 @@ EOT
   echo "-- libvirt for KVM is configured."
 #fi
 
+echo -n "Please review /etc/network/interfaces and edit to your liking [press any key] "; $READ
+nano /etc/network/interfaces
+
 #echo; echo -n "Setup iptables and edit rules? [Y/n] "; YESNO=""; $READ YESNO
 #case $YESNO in ""|[Yy]) YESNO="y";; esac
 #if [ "$YESNO" = "y" ]; then
-  sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+  #sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+  echo -e "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+  echo -e "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
+  echo -e "net.ipv6.conf.all.proxy_ndp=1" >> /etc/sysctl.conf
   cat > /etc/iptables.rules << EOT
 *filter
 -P INPUT ACCEPT
