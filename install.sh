@@ -176,9 +176,10 @@ nano /etc/network/interfaces
 -P OUTPUT ACCEPT
 
 -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
 -A INPUT --destination 255.255.255.255 -j DROP
 
--A INPUT -m state --state NEW -p icmp --icmp-type echo-request -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
 -A INPUT -m state --state NEW -p tcp --dport 22 -j ACCEPT
 
 -A INPUT -j LOG --log-prefix "[iptables] " --log-level warning
@@ -196,6 +197,12 @@ EOT
 -P FORWARD ACCEPT
 -P OUTPUT ACCEPT
 
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+
+-A INPUT -p icmpv6 -j ACCEPT
+
+-A INPUT -j LOG --log-prefix "[ip6tables] " --log-level warning
 -P INPUT DROP
 COMMIT
 EOT
